@@ -36,4 +36,4 @@
 
 ## 👨‍💻 Developer
 
-Created by **Kritagya**
+Created by **Kritagya Yadav**
