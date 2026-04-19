@@ -1,99 +1,242 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BudgetBuddy: Expense Tracker</title>
-  <link rel="stylesheet" href="index.css">
-  <link href="Image/favicon-32x32.png" rel="icon" type="icon/png" />
+  <title>BudgetBuddy Pro | Smart Finance</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
-</head>
-<body>
-  
-  <nav class="navbar">
-    <div class="logo">BudgetBuddy</div>
-    <ul class="nav-links">
-      <li><a href="#summary">Summary</a></li>
-      <li><a href="#add-expense">Add Expense</a></li>
-      <li><a href="#transaction-history">Transaction History</a></li>
-      <li><a href="#expensePieChart">Expense Chart</a></li>
-      <li><a href="#intersection">Contact Us</a></li>
-    </ul>
-  </nav>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+    
+    :root {
+      --neon-green: #4ade80;
+      --neon-blue: #3b82f6;
+      --glass-bg: rgba(15, 23, 42, 0.8);
+    }
 
-  <header>
-    <img src="Image/logo-png.png" alt="Logo" width="100" style="border-radius: 60px;">
-    <h1>BudgetBuddy: Expense Tracker</h1>
-    <p id="current-date-time"></p> 
-  </header>
-  <br>
-  <div id="summary">
-    <h2>Summary</h2>
-    <p>Total Income: <span id="total-income-display">₹0.00</span></p>
-    <p>Total Expenses: <span id="total-expenses-display">₹0.00</span></p>
-    <p>Remaining Balance: <span id="remaining-balance-display">₹0.00</span></p>
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: radial-gradient(circle at 0% 0%, #1e1b4b 0%, #020617 50%);
+      color: #f8fafc;
+      overflow-x: hidden;
+    }
+
+    .premium-glass {
+      background: var(--glass-bg);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      backdrop-filter: blur(16px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .premium-glass:hover {
+      border: 1px solid rgba(74, 222, 128, 0.3);
+      transform: translateY(-5px);
+    }
+
+    .nav-link {
+      position: relative;
+      transition: color 0.3s ease;
+    }
+
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -4px;
+      left: 0;
+      background: var(--neon-green);
+      transition: width 0.3s ease;
+    }
+
+    .nav-link:hover::after { width: 100%; }
+
+    /* Custom Scrollbar for the Cyberpunk aesthetic */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #020617; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--neon-green); }
+
+    .stat-card-glow {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background: var(--neon-green);
+      filter: blur(80px);
+      opacity: 0.1;
+      top: -20px;
+      right: -20px;
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-12">
+
+  <div class="fixed top-0 w-full z-[100] px-4 md:px-10 py-6">
+    <nav class="premium-glass rounded-2xl px-8 py-4 flex justify-between items-center max-w-7xl mx-auto border border-white/10">
+      <div class="flex items-center gap-3 animate__animated animate__fadeInLeft">
+          <div class="p-2 bg-gradient-to-br from-green-400 to-blue-600 rounded-lg shadow-lg shadow-green-500/20">
+              <i class="fas fa-chart-pie text-white text-lg"></i>
+          </div>
+          <span class="text-2xl font-bold tracking-tight text-white">Budget<span class="text-green-400">Buddy</span></span>
+      </div>
+      
+      <div class="hidden md:flex gap-10 font-medium text-slate-400 animate__animated animate__fadeInDown">
+        <a href="#summary-section" class="nav-link hover:text-white">Dashboard</a>
+        <a href="#add-expense" class="nav-link hover:text-white">Expenses</a>
+        <a href="#transaction-history" class="nav-link hover:text-white">History</a>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <span id="current-date-time" class="hidden lg:block text-xs font-mono text-slate-500 bg-slate-900/50 px-3 py-1 rounded-full border border-white/5"></span>
+        <button id="reset-all" class="text-slate-400 hover:text-red-400 transition-colors" title="Reset All Data">
+            <i class="fas fa-power-off"></i>
+        </button>
+      </div>
+    </nav>
   </div>
 
-  <main>
-    <section>
-      <h2>Set Total Income</h2>
-      <input type="number" id="total-income-input" placeholder="Enter total income">
-      <button id="set-income">Set Income</button>
-    </section>
+  <main class="max-w-7xl mx-auto px-6 pt-32 space-y-10">
+    
+    <header class="text-center space-y-4 animate__animated animate__fadeIn">
+        <h1 class="text-5xl md:text-6xl font-bold bg-gradient-to-r from-white via-slate-300 to-slate-500 bg-clip-text text-transparent tracking-tight">
+            Financial Control, <span class="text-green-400">Simplified.</span>
+        </h1>
+        <p class="text-slate-400 text-lg max-w-2xl mx-auto">Track your spending patterns with our high-precision visualization engine.</p>
+    </header>
 
-    <section>
-      <h2 id="add-expense">Add Expense</h2>
-      <input type="text" id="solo-expense-title" placeholder="Expense Title">
-      <input type="number" id="solo-expense-amount" placeholder="Expense Amount">
-      <select id="solo-expense-category">
-        <option value="">Select Category</option>
-        <option value="Food">Food</option>
-        <option value="Travel">Travel</option>
-        <option value="Rent">Rent</option>
-        <option value="Others">Others</option>
-      </select>
-      <button id="add-solo-expense">Add Expense</button>
-    </section>
+    <div id="summary-section" class="grid grid-cols-1 md:grid-cols-3 gap-6 animate__animated animate__fadeInUp">
+      <div class="premium-glass p-8 rounded-[2rem] relative overflow-hidden group">
+        <div class="stat-card-glow group-hover:opacity-20 transition-opacity"></div>
+        <p class="text-slate-500 text-xs font-bold uppercase tracking-[0.2em]">Available Balance</p>
+        <h3 id="remaining-balance-display" class="text-4xl font-bold mt-4 text-white">₹0.00</h3>
+        <div class="mt-4 flex items-center gap-2 text-xs text-green-400 bg-green-400/10 w-fit px-2 py-1 rounded-md">
+            <i class="fas fa-arrow-up"></i> Live Tracking
+        </div>
+      </div>
 
-    <section>
-      <h2 id="transaction-history">Transaction History</h2>
-      <select id="history-filter">
-        <option value="">All Categories</option>
-        <option value="Food">Food</option>
-        <option value="Travel">Travel</option>
-        <option value="Rent">Rent</option>
-        <option value="Others">Others</option>
-      </select>
-      <ul id="transaction-history-list"></ul>
-    </section>
+      <div class="premium-glass p-8 rounded-[2rem] relative overflow-hidden group">
+        <p class="text-slate-500 text-xs font-bold uppercase tracking-[0.2em]">Total Revenue</p>
+        <h3 id="total-income-display" class="text-4xl font-bold mt-4 text-blue-400">₹0.00</h3>
+        <input type="number" id="total-income-input" class="mt-4 w-full bg-slate-900/50 border border-white/10 rounded-xl p-2 text-sm focus:border-blue-500 outline-none transition-all" placeholder="Update Income...">
+        <button id="set-income" class="mt-2 text-[10px] text-blue-400 uppercase font-bold tracking-widest hover:text-blue-300">Set Base Income</button>
+      </div>
 
-    <section>
-      <h2 id="expensePieChart">Expense Chart</h2>
-      <canvas id="expensePieChartCanvas"></canvas>
-    </section>
+      <div class="premium-glass p-8 rounded-[2rem] relative overflow-hidden group">
+        <p class="text-slate-500 text-xs font-bold uppercase tracking-[0.2em]">Total Outflow</p>
+        <h3 id="total-expenses-display" class="text-4xl font-bold mt-4 text-red-400">₹0.00</h3>
+        <div class="mt-4 flex items-center gap-2 text-xs text-red-400">
+            <i class="fas fa-wallet opacity-50"></i> Monthly Spend
+        </div>
+      </div>
+    </div>
 
-    <section id="button-container">
-      <button id="download-pdf">Download PDF</button>
-      <button id="reset-all">Reset</button>
-    </section>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+      
+      <div class="lg:col-span-4 space-y-8 animate__animated animate__fadeInLeft">
+        <section id="add-expense" class="premium-glass p-8 rounded-[2.5rem] border-t-2 border-green-500/20">
+          <div class="flex items-center gap-3 mb-8">
+            <div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                <i class="fas fa-plus text-green-400 text-sm"></i>
+            </div>
+            <h2 class="text-xl font-bold">New Transaction</h2>
+          </div>
+          
+          <div class="space-y-5">
+            <div class="group">
+                <label for="solo-expense-title" class="text-[10px] text-slate-500 uppercase ml-2 mb-1 block font-bold tracking-widest">Description</label>
+                <input type="text" id="solo-expense-title" class="w-full bg-slate-900/80 border border-white/5 p-4 rounded-2xl focus:border-green-500 transition-all outline-none" placeholder="e.g. Starbucks Coffee">
+            </div>
+            
+            <div class="group">
+                <label for="solo-expense-amount" class="text-[10px] text-slate-500 uppercase ml-2 mb-1 block font-bold tracking-widest">Amount (₹)</label>
+                <input type="number" id="solo-expense-amount" class="w-full bg-slate-900/80 border border-white/5 p-4 rounded-2xl focus:border-green-500 transition-all outline-none" placeholder="0.00">
+            </div>
+
+            <div class="group">
+                <label for="solo-expense-category" class="text-[10px] text-slate-500 uppercase ml-2 mb-1 block font-bold tracking-widest">Category</label>
+                <select id="solo-expense-category" class="w-full bg-slate-900/80 border border-white/5 p-4 rounded-2xl focus:border-green-500 transition-all outline-none appearance-none" title="Select Category">
+                    <option value="">Choose Type</option>
+                    <option value="Food">🍔 Nutrition</option>
+                    <option value="Travel">🚗 Transport</option>
+                    <option value="Rent">🏠 Lifestyle</option>
+                    <option value="Others">✨ Miscellaneous</option>
+                </select>
+            </div>
+
+            <button id="add-solo-expense" class="w-full bg-gradient-to-r from-green-600 to-green-400 hover:from-green-500 hover:to-green-300 text-slate-950 font-bold py-4 rounded-2xl transition-all shadow-xl shadow-green-500/20 active:scale-95">
+              Confirm Transaction
+            </button>
+          </div>
+        </section>
+
+        <div class="premium-glass p-6 rounded-[2rem] flex flex-col gap-3">
+            <button id="download-pdf" class="w-full border border-white/5 hover:bg-white/5 p-4 rounded-2xl flex items-center justify-between group transition-all">
+                <span class="text-sm font-semibold">Generate PDF Intelligence</span>
+                <i class="fas fa-chevron-right text-xs text-slate-600 group-hover:text-white"></i>
+            </button>
+        </div>
+      </div>
+
+      <div class="lg:col-span-8 space-y-8 animate__animated animate__fadeInRight">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <section class="premium-glass p-8 rounded-[2.5rem]">
+                <h2 class="text-lg font-bold mb-6 text-slate-400 tracking-tight">Allocation Map</h2>
+                <div class="h-64 flex items-center justify-center">
+                    <canvas id="expensePieChartCanvas"></canvas>
+                </div>
+            </section>
+
+            <section class="premium-glass p-8 rounded-[2.5rem] flex flex-col justify-center text-center">
+                <div class="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-shield-halved text-blue-400 text-2xl"></i>
+                </div>
+                <h2 class="text-xl font-bold mb-2">Local Storage</h2>
+                <p class="text-slate-500 text-sm leading-relaxed">Your data is stored locally using AES encryption equivalent standards for maximum privacy.</p>
+            </section>
+        </div>
+
+        <section id="transaction-history" class="premium-glass p-8 rounded-[2.5rem]">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <h2 class="text-2xl font-bold">Activity Log</h2>
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <i class="fas fa-filter text-slate-600"></i>
+                <select id="history-filter" class="bg-transparent border-b border-white/10 text-sm focus:border-green-400 outline-none pb-1" title="Filter Transactions">
+                    <option value="">All Streams</option>
+                    <option value="Food">Food</option>
+                    <option value="Travel">Travel</option>
+                    <option value="Rent">Rent</option>
+                    <option value="Others">Others</option>
+                </select>
+            </div>
+          </div>
+          
+          <div class="max-h-[400px] overflow-y-auto pr-4 custom-scrollbar">
+            <ul id="transaction-history-list" class="space-y-4">
+                </ul>
+          </div>
+        </section>
+      </div>
+    </div>
   </main>
-  <footer>
-    <div id="intersection">
-      <h2>Connect with Us</h2>
-      <ul id="social-links">
-        <li><a href="https://www.facebook.com" target="_blank">Facebook</a></li>
-        <li><a href="https://www.twitter.com" target="_blank">Twitter</a></li>
-        <li><a href="https://www.instagram.com" target="_blank">Instagram</a></li>
-        <li><a href="https://www.linkedin.com" target="_blank">LinkedIn</a></li>
-      </ul>
-      <h2>FAQs</h2>
-      <ul id="faqs">
-        <li><strong>Q:</strong> How do I reset all data?<br><strong>A:</strong> Click on the "Reset" button to clear all entries.</li>
-        <li><strong>Q:</strong> Can I export my expense data?<br><strong>A:</strong> Yes, use the "Download PDF" button to save your data.</li>
-        <li><strong>Q:</strong> How can I categorize my expenses?<br><strong>A:</strong> Use the category dropdown when adding an expense.</li>
-      </ul>
-      <p id="credits">Developed by Kritagya</p>
+
+  <footer class="max-w-7xl mx-auto px-6 mt-20">
+    <div class="premium-glass rounded-[3rem] p-12 text-center relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-t from-green-500/5 to-transparent pointer-events-none"></div>
+        <h3 class="text-2xl font-bold mb-6">Built for Creators & Developers</h3>
+        <div class="flex justify-center gap-6 mb-8 text-slate-400">
+            <a href="#" class="hover:text-green-400 transition-colors" title="GitHub Profile"><i class="fab fa-github text-2xl"></i></a>
+            <a href="#" class="hover:text-green-400 transition-colors" title="LinkedIn Profile"><i class="fab fa-linkedin text-2xl"></i></a>
+            <a href="#" class="hover:text-green-400 transition-colors" title="Instagram Profile"><i class="fab fa-instagram text-2xl"></i></a>
+        </div>
+        <p class="text-slate-500 text-sm uppercase tracking-widest font-bold">
+            Project debuugdiary © 2026 | Engineer: Kritagya
+        </p>
     </div>
   </footer>
 
